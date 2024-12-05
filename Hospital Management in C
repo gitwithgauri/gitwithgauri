@@ -1,0 +1,231 @@
+#include <stdio.h>
+#include <stdlib.h>  // system("cls")
+#include <time.h>
+#include <string.h>
+
+void admitPatient();
+void patientList();
+void dischargePatient();
+void addDoctor();
+void doctorList();
+
+struct patient {
+    int id;
+    char patientName[50];
+    char patientAddress[50];
+    char disease[50];
+    char date[12];
+} p;  //typedef
+
+struct doctor {
+    int id;
+    char name[50];
+    char address[50];
+    char specialize[50];
+    char date[12];
+} d;  //typedef
+
+FILE *fp;
+
+int main() {
+    int ch;
+    while (1) {
+        system("cls"); // to clear the screen
+        
+         printf("********* \n"); // to clear the screen
+        printf("HOSPITAL MANAGEMENT SYSTEM \n");
+        printf("********* \n");
+        printf("1 to Admit Patient\n");
+        printf("2 to View Patient List\n");
+        printf("3 to Discharge Patient\n");
+        printf("4 to Add Doctor\n");
+        printf("5 to View Doctors List\n");
+        printf("0 to Exit\n\n");
+        printf("Enter your choice: ");
+        scanf("%d", &ch);
+
+        // Consume the newline character left by scanf
+        getchar();
+
+        switch (ch) {
+            case 0:
+                exit(0);
+            case 1:
+                admitPatient();
+                break;
+            case 2:
+                patientList();
+                break;
+            case 3:
+                dischargePatient();
+                break;
+            case 4:
+                addDoctor();
+                break;
+            case 5:
+                doctorList();
+                break;
+            default:
+                printf("Invalid Choice\n\n");
+        }
+
+        printf("\n\nPress Any Key To Continue");
+        getchar();  // To receive character input from the user to continue
+    }
+    return 0;
+}
+
+void admitPatient() {
+    char Date[12];
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    sprintf(Date, "%02d/%02d/%d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+    strcpy(p.date, Date);
+
+    fp = fopen("patient.txt", "ab");
+    if (fp == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+
+    printf("Enter Patient Id: ");
+    scanf("%d", &p.id);
+    getchar();  // To clear the newline left in the buffer
+
+    printf("Enter Patient Name: ");
+    fflush(stdin);
+    scanf("%[^\n]s", p.patientName);
+
+    printf("Enter Patient Address: ");
+     fflush(stdin);
+    scanf("%[^\n]s", p.patientAddress);
+
+    printf("Enter Patient Disease: ");
+     fflush(stdin);
+   scanf("%[^\n]s", p.disease);
+
+
+    printf("\nPATIENT ADDED SUCCESFULLY!");
+
+    fwrite(&p, sizeof(p), 1, fp);
+    fclose(fp);
+}
+
+void patientList() {
+    system("cls");
+    printf("<* PATIENT LIST *>\n\n");
+    printf("%-20s %-30s %-20s %-10s %s\n", "ID", "Name", "Address", "Disease", "Date");
+    printf("-------------------------------------------------------------------------------------------------------------------------------\n");
+
+    fp = fopen("patient.txt", "r");
+    if (fp == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+
+    while (fread(&p, sizeof(p), 1, fp) == 1) {
+        printf("%-20d %-30s %-20s %-10s %s\n", p.id, p.patientName, p.patientAddress, p.disease, p.date);
+    }
+    fclose(fp);
+}
+
+void dischargePatient() {
+    int id, f = 0;
+    system("cls");
+    printf("<* DISCHARGE PATIENT *> \n\n");
+    printf("Enter Patient ID to discharge: ");
+    scanf("%d", &id);
+
+    FILE *ft;
+    fp = fopen("patient.txt", "r");
+    if (fp == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+    ft = fopen("temp.txt", "w");
+     if (ft == NULL)
+      {
+        printf("Error opening temporary file\n");
+        fclose(fp);
+       return;
+     }
+
+    while (fread(&p, sizeof(p), 1, fp) == 1) {
+        if (id == p.id) {
+            f = 1;
+        } else {
+            fwrite(&p, sizeof(p), 1, ft);
+        }
+    }
+
+    if (f == 1) {
+        printf("\n\nPatient Discharged Successfully.");
+    } else {
+        printf("\n\nRecord not found!");
+    }
+
+    fclose(fp);
+    fclose(ft);
+
+    remove("patient.txt");
+    rename("temp.txt", "patient.txt");
+}
+
+void addDoctor() {
+    // char Date[12];
+    // time_t t = time(NULL);
+    // struct tm tm = *localtime(&t);
+    // sprintf(Date, "%02d/%02d/%d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+    // strcpy(d.date, Date);
+
+    system("cls");
+    printf("<* ADD DOCTOR *>\n\n");
+
+    fp = fopen("doctor.txt", "a");
+    if (fp == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+
+    printf("Enter Doctor Id: ");
+    scanf("%d", &d.id);
+    getchar();  // To clear the newline left in the buffer
+
+    printf("Enter Doctor Name: ");
+    fflush(stdin);
+    scanf("%[^\n]s", d.name);
+
+    printf("Enter Doctor Address: ");
+     fflush(stdin);
+     scanf("%[^\n]s", d.address);
+
+    printf("Doctor Specializes in: ");
+     fflush(stdin);
+     scanf("%[^\n]s", d.specialize);
+
+    printf("DOCTOR ADDED SUCCESFULLY! \n\n");
+
+    fwrite(&d, sizeof(d), 1, fp);
+    fclose(fp);
+}
+
+void doctorList() {
+    system("cls");
+    printf("<* DOCTOR LIST *> \n\n");
+
+    printf("%-20s %-30s %-30s %-20s %s\n", "ID", "Name", "Address", "Specialize","Date");
+    printf("-------------------------------------------------------------------------------------------------------------------------------\n");
+
+    fp = fopen("doctor.txt", "r");
+    if (fp == NULL) {
+        printf("Error opening file\n");
+        return;
+    }
+
+    while (fread(&d,sizeof(d), 1, fp)==1)
+    {
+        printf("%-20d %-30s %-30s %-20s %s\n", d.id, d.name, d.address, d.specialize, d.date);
+
+    }
+    fclose(fp);
+}
